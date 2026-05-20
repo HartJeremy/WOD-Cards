@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Deck WOD</title>
+<style>
+:root{--bg:#0a0c12;--panel:#12172a;--panel2:#1a1f35;--line:#1e2540;--line2:#2a3050;--text:#e8e8f0;--muted:#667;--faint:#445;--gold:#fbbf24;--red:#f87171;--blue:#60a5fa;--green:#4ade80;--purple:#c084fc}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Georgia,serif;padding-bottom:40px}
+button,input,textarea{font-family:inherit}
+button{cursor:pointer}
+.header{background:#0e1220;border-bottom:1px solid var(--line);padding:18px 16px 0}
+.wrap,.main{max-width:470px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.kicker{font-size:10px;letter-spacing:3px;color:var(--faint)}
+.title{font-size:20px;font-weight:bold;letter-spacing:1px}
+.settingsButton{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;color:var(--gold);min-width:125px}
+.settingsButton div:last-child{font-size:9px;color:var(--faint);letter-spacing:1px;margin-top:2px}
+.tabs{display:flex}
+.tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--faint);padding:10px 4px;letter-spacing:1px;font-size:12px}
+.tab.active{border-bottom-color:var(--gold);color:var(--gold)}
+.main{padding:18px 16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.label{font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px}
+.small{font-size:11px;color:#556}
+.btn{border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:#889;padding:8px 10px}
+.pill{border:1px solid var(--line2);border-radius:999px;background:transparent;color:#889;padding:5px 11px;font-size:11px}
+.pill.active{background:var(--line2);color:var(--text)}
+.adjust{display:flex;align-items:center;gap:6px}
+.adjust button{width:32px;height:32px;border-radius:8px;font-size:18px}
+.big{flex:1;text-align:center;font-size:22px;font-weight:bold}
+.progress{height:5px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0 10px}
+.fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--red))}
+.suits{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.suitrow{display:flex;align-items:center;gap:8px}
+.miniProgress{height:3px;background:var(--line);border-radius:4px;overflow:hidden}
+.exerciseLine{display:flex;align-items:center;gap:10px;margin:8px 0}
+.mainBtn{width:100%;padding:16px;border-radius:14px;border:1px solid #fbbf2444;background:linear-gradient(135deg,#12172a,#1a2540);color:var(--gold);font-size:16px;letter-spacing:3px;font-weight:bold}
+.danger{width:100%;padding:11px;border-radius:10px;border:1px solid #f8717133;background:transparent;color:var(--red);font-size:11px;letter-spacing:2px}
+.equip{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--panel2);border:1px solid var(--line2);color:#889;border-radius:10px;padding:9px 12px;margin:7px 0}
+.equip.on{border-color:#fbbf2455;background:#201d13;color:var(--text)}
+.toggle{width:34px;height:18px;border-radius:999px;background:#2a3050;padding:2px;flex-shrink:0}
+.toggle span{display:block;width:14px;height:14px;border-radius:50%;background:#667;transition:.2s}
+.equip.on .toggle{background:#fbbf2444}
+.equip.on .toggle span{background:var(--gold);transform:translateX(16px)}
+.option{width:100%;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:#889;text-align:left;padding:9px 12px;margin:5px 0;font-size:13px}
+.option.selected{font-weight:bold}
+.card{background:var(--panel);border-radius:14px;padding:14px;margin:10px 0;border:1px solid var(--line)}
+.card.done{background:#0d1a10;opacity:.62;border-color:#4ade8033!important}
+.card.bonus{background:#171320}
+.cardTop{display:flex;align-items:center;gap:12px}
+.miniCard{width:46px;height:58px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;flex-shrink:0}
+.cardName{font-size:14px;font-weight:bold}
+.reps{font-size:24px;font-weight:bold}
+.controls{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.feels{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.feel{border:1px solid var(--line2);background:var(--line);color:var(--muted);border-radius:999px;padding:4px 8px;font-size:11px}
+input,textarea{width:100%;background:var(--line);border:1px solid var(--line2);border-radius:9px;color:var(--text);padding:9px;margin-bottom:8px}
+.doneBtn{width:100%;padding:10px;border-radius:10px;border:1px solid #4ade8044;background:linear-gradient(135deg,#14532d,#166534);color:var(--green);letter-spacing:2px;font-weight:bold}
+.event{background:#181525;border:1px solid #fbbf2444;border-radius:12px;padding:10px 12px;margin:8px 0}
+.event strong{color:var(--gold);font-size:12px;letter-spacing:1px}
+.postbox{background:#0d1a10;border:1px solid #4ade8033;border-radius:14px;padding:14px;margin-top:12px}
+.postbox textarea{min-height:180px;font-family:Arial,sans-serif;line-height:1.35;background:#0f1424}
+.historyItem{display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin:8px 0}
+.empty{text-align:center;color:var(--faint);padding:42px}
+@media(max-width:380px){.grid2,.suits{grid-template-columns:1fr}}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0c12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deck WOD">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const WORKOUT_CONFIG={
+  suits:{
+    hearts:{symbol:"♥",name:"Push",color:"#f87171",emoji:"💪"},
+    spades:{symbol:"♠",name:"Pull",color:"#60a5fa",emoji:"🙌"},
+    clubs:{symbol:"♣",name:"Legs",color:"#4ade80",emoji:"🦵"},
+    diamonds:{symbol:"♦",name:"Core",color:"#fbbf24",emoji:"🔥"}
+  },
+  baseExercises:{
+    hearts:["Push-ups","Diamond Push-ups","Wide Push-ups","Pike Push-ups","Decline Push-ups","Incline Push-ups","Archer Push-ups","Tricep Dips (chair)","Shoulder Taps"],
+    spades:["Superman Hold","Prone Y-T-W","Reverse Snow Angels","Lying Back Extensions","Scapular Squeezes","Door Frame Rows","Towel Rows","Table Rows","Wall Angels"],
+    clubs:["Air Squats","Jump Squats","Reverse Lunges","Forward Lunges","Lateral Lunges","Step-ups","Glute Bridges","Single-Leg Glute Bridge","Calf Raises","Squat Jumps","Wall Sit (sec)"],
+    diamonds:["Bicycle Crunches","Leg Raises","Plank Hold (sec)","Mountain Climbers","Flutter Kicks","Sit-ups","V-ups","Dead Bug","Russian Twists","Hollow Body Hold (sec)"]
+  },
+  baseFullBody:["Burpees","Squat Thrusts","Bear Crawls (sec)","Inchworms","Star Jumps","Sprawls","Up-Down Planks","Broad Jumps"],
+  equipment:{
+    pullupBar:{label:"Pull-up bar",description:"Pull-ups, chin-ups, hangs, hanging core work",defaultAvailable:false,suits:{spades:["Pull-ups","Chin-ups","Negative Pull-ups","Dead Hang (sec)","Scapular Pull-ups"],diamonds:["Hanging Knee Raises","Hanging Leg Raises"]},fullBody:["Pull-up Burpees"]},
+    dumbbells:{label:"Dumbbells",description:"Rows, presses, goblet work, weighted core",defaultAvailable:false,suits:{hearts:["DB Floor Press","DB Shoulder Press","DB Push Press","DB Renegade Rows"],spades:["DB Rows","DB Reverse Fly","DB Pullover"],clubs:["Goblet Squats","DB Reverse Lunges","DB Step-ups","DB Romanian Deadlifts","DB Calf Raises"],diamonds:["DB Russian Twists","DB Sit-ups","DB Dead Bug"]},fullBody:["DB Thrusters","DB Devil Press","DB Clean and Press"]},
+    kettlebells:{label:"Kettlebells",description:"Swings, cleans, presses, snatches",defaultAvailable:false,suits:{hearts:["KB Floor Press","KB Push Press"],spades:["KB Rows","KB High Pulls"],clubs:["KB Goblet Squats","KB Swings","KB Deadlifts","KB Reverse Lunges"],diamonds:["KB Russian Twists","KB Sit-ups","KB Plank Pull-throughs"]},fullBody:["KB Swings","KB Clean and Press","KB Snatches"]},
+    jumpRope:{label:"Jump rope",description:"Singles, high knees, double-under practice",defaultAvailable:false,suits:{clubs:["Jump Rope Singles","Jump Rope High Knees","Lateral Line Hops"],diamonds:["Jump Rope Boxer Step","Jump Rope Side Swings"]},fullBody:["Jump Rope Singles","Double-Under Attempts","Jump Rope Sprint (sec)"]},
+    parallettes:{label:"Parallettes",description:"Dips, L-sits, push-up depth, skill work",defaultAvailable:false,suits:{hearts:["Parallette Push-ups","Parallette Dips","Pseudo Planche Lean"],diamonds:["L-Sit Hold (sec)","Tuck L-Sit Hold (sec)","Parallette Knee Raises"]},fullBody:["Shoot-throughs","Parallette Burpees"]},
+    resistanceBands:{label:"Resistance bands",description:"Rows, presses, pull-aparts, mobility",defaultAvailable:false,suits:{hearts:["Band Chest Press","Band Shoulder Press","Band Tricep Pressdowns"],spades:["Band Rows","Band Pull-aparts","Band Face Pulls","Assisted Pull-ups"],clubs:["Band Good Mornings","Band Squats","Lateral Band Walks"],diamonds:["Pallof Press","Band Woodchoppers"]},fullBody:["Band Thrusters","Band Squat to Press"]},
+    medicineBall:{label:"Medicine ball",description:"Slams, wall balls, rotational core",defaultAvailable:false,suits:{hearts:["Med Ball Push-ups","Med Ball Chest Pass"],clubs:["Wall Balls","Med Ball Squat Throws"],diamonds:["Med Ball Russian Twists","Med Ball Slams","Med Ball Sit-up Throws"]},fullBody:["Med Ball Slams","Wall Balls"]},
+    boxOrBench:{label:"Box or bench",description:"Step-ups, dips, elevated push-ups, jumps",defaultAvailable:false,suits:{hearts:["Bench Dips","Feet-Elevated Push-ups","Hands-Elevated Push-ups"],clubs:["Box Step-ups","Box Jumps","Bulgarian Split Squats"],diamonds:["Bench Knee Tucks","Bench Plank Shoulder Taps"]},fullBody:["Burpee Box Step-over","Box Jump Overs"]},
+    sandbagOrRuck:{label:"Sandbag or ruck",description:"Carries, squats, lunges, loaded conditioning",defaultAvailable:false,suits:{spades:["Sandbag Rows","Ruck Rows"],clubs:["Ruck Squats","Sandbag Squats","Sandbag Lunges","Loaded Step-ups"],diamonds:["Sandbag Sit-ups","Ruck Plank Pull-throughs"]},fullBody:["Sandbag Ground-to-Shoulder","Ruck Burpees","Sandbag Bear Hug Carry (sec)"]},
+    abWheel:{label:"Ab wheel",description:"Rollouts and anti-extension core",defaultAvailable:false,suits:{diamonds:["Ab Wheel Rollouts","Kneeling Ab Wheel Rollouts","Ab Wheel Plank Hold (sec)"]},fullBody:[]},
+    ringsOrTrx:{label:"Rings or TRX",description:"Rows, push-ups, assisted squats, curls",defaultAvailable:false,suits:{hearts:["Ring Push-ups","TRX Push-ups"],spades:["Ring Rows","TRX Rows","Ring Face Pulls","Ring Curls"],clubs:["Assisted Pistol Squats","TRX Reverse Lunges"],diamonds:["TRX Fallout","Ring Knee Tucks"]},fullBody:["TRX Burpees"]}
+  },
+  closers:["Small war. Won anyway.","Cardboard casino of pain completed.","Sweat equity deposited.","Legs reconsidering their future.","Pull-ups filed a formal complaint.","Core toasted. Spirits high.","Another hand dealt. Another hand survived.","Burpees remain deeply unpopular.","Gravity applied aggressively today.","Built slightly different now.","Training arc continues.","Deck cleared. Human mostly intact.","Mobility tomorrow should be interesting.","Strength stats increased.","The cards chose violence.","Conditioning receipt collected.","Respiratory system stress-tested.","No gym required. Only bad decisions.","Work completed. Engine upgraded.","Today’s villain: lung capacity.","Muscles notified.","Still standing somehow.","Deck defeated.","Sweat level: unreasonable.","Tomorrow’s soreness already scheduled.",
+
+    "Cardio attorneys reviewing today’s decisions.",
+    "The deck remains undefeated emotionally.",
+    "Breathing became a side quest.",
+    "Legs entered airplane mode.",
+    "Muscles buffering...",
+    "Conditioning patch installed.",
+    "The cards demanded tribute.",
+    "Upper body filing grievances.",
+    "Somewhere a burpee is laughing.",
+    "Core stability currently theoretical.",
+    "Stairs now considered an advanced movement.",
+    "The deck woke up angry.",
+    "Sweat levels legally suspicious.",
+    "Today’s workout sponsored by poor judgment.",
+    "Lung capacity sent a resignation letter.",
+    "Recovery tomorrow looking fictional.",
+    "This counted as emotional damage.",
+    "Face cards behaving like supervillains.",
+    "The combo system has become self-aware.",
+    "Deck shuffled. Soul unshuffled.",
+    "Training complete. Walking questionable.",
+    "Chaos mode remains a terrible influence.",
+    "Card drawn. Regret drawn immediately after.",
+    "Leg day entered the chat aggressively.",
+    "Heart rate briefly explored orbit.",
+],
+  emojis:["🃏","🔥","💪","😤","💀","🦵","⚡","🏋️","✅","🙌"]
+};
+
+const SUITS=WORKOUT_CONFIG.suits;
+const FACES=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const FACE_REPS={J:20,Q:30,K:40,A:50};
+const FEELS=["💀 Died","😤 Grind","😐 Solid","💪 Strong","🔥 Crushed it"];
+const STORE="card-deck-wod-v7-inline-deck-controls";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const rand=a=>a[Math.floor(Math.random()*a.length)];
+const uniq=a=>[...new Set(a.filter(Boolean))];
+
+let state=load();
+
+function defaultEquipment(){return Object.fromEntries(Object.entries(WORKOUT_CONFIG.equipment).map(([k,v])=>[k,!!v.defaultAvailable]));}
+function defaultState(){
+  return {
+    multiplier:5,cardsPerDay:4,view:"home",showSettings:false,comboOn:false,comboMode:"light",
+    equipment:defaultEquipment(),
+    deckNumber:1,lifetimeCards:0,
+    selected:Object.fromEntries(Object.keys(SUITS).map(s=>[s,WORKOUT_CONFIG.baseExercises[s][0]])),
+    faceExercise:WORKOUT_CONFIG.baseFullBody[0],
+    deck:buildDeck(),today:[],events:[],logged:[],feel:{},notes:{},post:""
+  };
+}
+function load(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(STORE)||"null");
+    if(!parsed)return defaultState();
+    const d=defaultState();
+    return {...d,...parsed,equipment:{...d.equipment,...(parsed.equipment||{})},selected:{...d.selected,...(parsed.selected||{})}};
+  }catch(e){return defaultState();}
+}
+function save(){localStorage.setItem(STORE,JSON.stringify(state));}
+function update(patch){state={...state,...patch};reconcile();save();render();}
+function buildDeck(){
+  const deck=[]; Object.keys(SUITS).forEach(suit=>FACES.forEach(face=>deck.push({suit,face,id:`${suit}-${face}-${Math.random().toString(36).slice(2,7)}`})));
+  return shuffle(deck);
+}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function isFace(f){return FACE_REPS[f]!==undefined;}
+function reps(face){return isFace(face)?FACE_REPS[face]:parseInt(face,10)*state.multiplier;}
+function faceVal(f){return f==="A"?14:f==="K"?13:f==="Q"?12:f==="J"?11:parseInt(f,10);}
+function isRed(s){return s==="hearts"||s==="diamonds";}
+function scale(n){return Math.round(n*(state.comboMode==="chaos"?2:state.comboMode==="medium"?1.5:1));}
+function availableExercises(suit){
+  let list=[...(WORKOUT_CONFIG.baseExercises[suit]||[])];
+  Object.entries(state.equipment).forEach(([key,on])=>{
+    const extra=WORKOUT_CONFIG.equipment[key]?.suits?.[suit];
+    if(on&&extra)list=list.concat(extra);
+  });
+  return uniq(list);
+}
+function availableFullBody(){
+  let list=[...WORKOUT_CONFIG.baseFullBody];
+  Object.entries(state.equipment).forEach(([key,on])=>{
+    const extra=WORKOUT_CONFIG.equipment[key]?.fullBody;
+    if(on&&extra)list=list.concat(extra);
+  });
+  return uniq(list);
+}
+function reconcile(){
+  Object.keys(SUITS).forEach(s=>{const list=availableExercises(s);if(!list.includes(state.selected[s]))state.selected[s]=list[0];});
+  const full=availableFullBody(); if(!full.includes(state.faceExercise))state.faceExercise=full[0];
+}
+function cardExercise(c){return c.bonus?c.exercise:(isFace(c.face)?state.faceExercise:state.selected[c.suit]);}
+function cardReps(c){return c.bonus?c.reps:reps(c.face);}
+function bonus(exercise,reps,name){return {id:`bonus-${Date.now()}-${Math.random()}`,face:"★",suit:"bonus",bonus:true,exercise,reps,name,done:false};}
+
+function deal(){
+  let deck=[...state.deck];
+  let deckNumber=state.deckNumber||1;
+  const cards=[];
+
+  while(cards.length < state.cardsPerDay){
+    if(!deck.length){
+      deck=buildDeck();
+      deckNumber += 1;
+    }
+    const next=deck.shift();
+    if(next) cards.push({...next,done:false,deckNumber});
+  }
+
+  let events=[];
+  if(state.comboOn){
+    const result=combos(cards,deck);
+    deck=result.deck;
+    events=result.events;
+    cards.splice(0,cards.length,...result.cards);
+  }
+
+  state.deck=deck;
+  state.deckNumber=deckNumber;
+  state.today=cards;
+  state.events=events;
+  state.feel={};
+  state.notes={};
+  state.post="";
+  save();
+  render();
+}
+
+function combos(baseCards,deck){
+  let cards=[...baseCards], events=[], nextDeck=[...deck];
+  const faceCount=baseCards.filter(c=>isFace(c.face)).length;
+  if(faceCount>=2){
+    const add=nextDeck.shift();
+    if(add){cards.push({...add,done:false,eventName:"Royal Pain"});events.push({name:"Royal Pain",reason:"Two or more face cards drawn",effect:"+1 bonus card"});}
+  }
+  const byFace={}; baseCards.forEach(c=>byFace[c.face]=(byFace[c.face]||0)+1);
+  const pair=Object.entries(byFace).find(([f,n])=>n>=2);
+  if(pair){const n=scale(reps(pair[0]));cards.push(bonus("Burpees",n,"Double Trouble"));events.push({name:"Double Trouble",reason:`Pair of ${pair[0]}s detected`,effect:`+${n} Burpees`});}
+  const bySuit={}; baseCards.forEach(c=>bySuit[c.suit]=(bySuit[c.suit]||0)+1);
+  const surge=Object.entries(bySuit).find(([s,n])=>n>=3);
+  if(surge){
+    const s=surge[0];
+    const map={hearts:["Push-up Burnout",10],spades:["Dead Hang (sec)",30],clubs:["Wall Sit (sec)",45],diamonds:["Plank Hold (sec)",45]};
+    const [ex,n0]=map[s]; const n=scale(n0);
+    cards.push(bonus(ex,n,"Suit Surge")); events.push({name:"Suit Surge",reason:`3+ ${SUITS[s].symbol} ${SUITS[s].name} cards`,effect:`+${n} ${ex}`});
+  }
+  if(baseCards.length>=4&&new Set(baseCards.map(c=>c.suit)).size===4){const n=scale(20);cards.push(bonus("Jumping Jacks",n,"Balanced Build"));events.push({name:"Balanced Build",reason:"All four suits drawn",effect:`+${n} Jumping Jacks`});}
+  if(baseCards.length>=4&&baseCards.every(c=>isRed(c.suit))){const n=scale(20);cards.push(bonus("Mountain Climbers",n,"Redline"));events.push({name:"Redline",reason:"All red cards drawn",effect:`+${n} Mountain Climbers`});}
+  if(baseCards.length>=4&&baseCards.every(c=>!isRed(c.suit))){const n=scale(10);cards.push(bonus("Squat Thrusts",n,"Blackout Strength"));events.push({name:"Blackout Strength",reason:"All black cards drawn",effect:`+${n} Squat Thrusts`});}
+  if(isStraight(baseCards)){
+    const low=[...baseCards].sort((a,b)=>faceVal(a.face)-faceVal(b.face))[0];
+    const n=scale(reps(low.face)); const ex=cardExercise(low);
+    cards.push(bonus(ex,n,"Ladder Climb")); events.push({name:"Ladder Climb",reason:"Sequential cards drawn",effect:`Repeat lowest card: +${n} ${ex}`});
+  }
+  return {cards,deck:nextDeck,events};
+}
+function isStraight(cards){
+  const v=uniq(cards.map(c=>faceVal(c.face))).sort((a,b)=>a-b);
+  if(v.length<4)return false;
+  for(let i=0;i<=v.length-4;i++)if(v[i+3]-v[i]===3)return true;
+  return false;
+}
+function doneCard(i){
+  const c=state.today[i];
+  const log={...c,exercise:cardExercise(c),reps:cardReps(c),feel:state.feel[i]||"",notes:state.notes[i]||"",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),ts:Date.now()+i};
+  const today=state.today.map((x,idx)=>idx===i?{...x,done:true}:x);
+  const finished=today.length&&today.every(x=>x.done);
+  update({today,logged:[log,...state.logged],lifetimeCards:(state.lifetimeCards||0)+1,post:finished?makePost(today,state.events):state.post});
+}
+function makePost(cards,events){
+  const total=cards.reduce((a,c)=>a+cardReps(c),0);
+  const groups={};
+  const exerciseNames=[];
+
+  cards.forEach(c=>{
+    const sym=c.bonus?"★":SUITS[c.suit].symbol;
+    const ex=cardExercise(c);
+
+    exerciseNames.push(ex.toLowerCase());
+
+    const key=sym+"|"+ex;
+    if(!groups[key])groups[key]={sym,ex,reps:0};
+    groups[key].reps+=cardReps(c);
+  });
+
+  const lines=Object.values(groups).map(g=>`${g.sym} ${g.reps} ${g.ex} ${rand(WORKOUT_CONFIG.emojis)}`);
+
+  const contextJokes=[];
+
+  if(exerciseNames.some(e=>e.includes("pull"))) contextJokes.push("Pull muscles now negotiating labor terms.");
+  if(exerciseNames.some(e=>e.includes("squat"))) contextJokes.push("Legs downgraded from premium to basic.");
+  if(exerciseNames.some(e=>e.includes("burpee"))) contextJokes.push("Burpees remain banned in several countries.");
+  if(exerciseNames.some(e=>e.includes("plank"))) contextJokes.push("Core stability briefly achieved.");
+  if(exerciseNames.some(e=>e.includes("hang"))) contextJokes.push("Grip strength entered witness protection.");
+  if(exerciseNames.some(e=>e.includes("lunge"))) contextJokes.push("Walking tomorrow becoming speculative.");
+  if(exerciseNames.some(e=>e.includes("jump"))) contextJokes.push("Knees submitted a formal review.");
+  if(events.length) contextJokes.push("The deck escalated the situation.");
+  if(state.comboMode==="chaos") contextJokes.push("Chaos mode remains a terrible influence.");
+  if(total > 100) contextJokes.push("Cardio briefly became a spiritual experience.");
+
+  const joke1 = contextJokes.length ? rand(contextJokes) : rand(WORKOUT_CONFIG.closers);
+
+  let joke2 = rand(WORKOUT_CONFIG.closers);
+  if(joke1 === joke2){
+    joke2 = rand(WORKOUT_CONFIG.closers);
+  }
+
+  let msg=`${rand([
+    "Finished today’s Card Deck WOD.",
+    "Card Deck WOD complete.",
+    "Today’s deck is done.",
+    "Deck session complete."
+  ])}
+
+${lines.join("\n")}
+
+${total} total reps.`;
+
+  if(events.length){
+    msg += `
+
+🃏 COMBO UNLOCKED:
+` + events.map(e=>`${e.name}: ${e.effect}`).join("\n");
+  }
+
+  msg += `
+
+${joke1}
+${joke2} ${rand(WORKOUT_CONFIG.emojis)}${rand(WORKOUT_CONFIG.emojis)}`;
+
+  return msg;
+}
+
+function resetCurrentDeck(){
+  if(!confirm("Reset the current deck to a fresh 52 cards? Your history and lifetime stats stay intact.")) return;
+
+  state.deck=buildDeck();
+  state.today=[];
+  state.events=[];
+  state.feel={};
+  state.notes={};
+  state.post="";
+  save();
+  render();
+}
+
+function startNextDeck(){
+  if(!confirm("Start the next deck now? Your history and lifetime stats stay intact.")) return;
+
+  state.deck=buildDeck();
+  state.today=[];
+  state.events=[];
+  state.feel={};
+  state.notes={};
+  state.post="";
+  state.deckNumber=(state.deckNumber||1)+1;
+  save();
+  render();
+}
+
+function resetEverything(){
+  if(!confirm("Reset EVERYTHING? This clears all decks, history, stats, notes, and lifetime counts.")) return;
+  if(!confirm("Final warning: this cannot be undone. Reset all Card Deck WOD data?")) return;
+
+  localStorage.removeItem(STORE);
+  state=defaultState();
+  save();
+  render();
+}
+
+window.resetCurrentDeck=resetCurrentDeck;
+window.startNextDeck=startNextDeck;
+window.resetEverything=resetEverything;
+
+function render(){
+  reconcile();
+  const app=$("app");
+  const done=state.today.filter(c=>c.done).length;
+  const totalToday=state.today.reduce((a,c)=>a+cardReps(c),0);
+  const totalLogged=state.logged.reduce((a,w)=>a+w.reps,0);
+  const equipmentCount=Object.values(state.equipment).filter(Boolean).length;
+  app.innerHTML=`
+  <div class="header"><div class="wrap">
+    <div class="top">
+      <div><div class="kicker">NO EQUIPMENT DEFAULT</div><div class="title">CARD DECK WOD</div></div>
+      <button class="settingsButton" data-act="settings">×${state.multiplier} · ${state.cardsPerDay}🃏<div>SETTINGS · ${equipmentCount} GEAR</div></button>
+    </div>
+    ${state.showSettings?settingsHTML():""}
+    <div class="tabs">${tab("home","Today")}${tab("exercises","Exercises")}${tab("history","History")}</div>
+  </div></div>
+  <div class="main">${state.view==="home"?homeHTML(done,totalToday,totalLogged):state.view==="exercises"?exercisesHTML():historyHTML(totalLogged)}</div>`;
+}
+function tab(id,label){return `<button class="tab ${state.view===id?"active":""}" data-view="${id}">${label.toUpperCase()}</button>`}
+function settingsHTML(){
+  return `<div class="settings-panel">
+    <div class="grid2">
+      <div>
+        <div class="label">MULTIPLIER</div>
+        <div class="adjust">
+          <button class="btn" data-act="mult-" style="color:var(--gold)">−</button>
+          <div class="big" style="color:var(--gold)">×${state.multiplier}</div>
+          <button class="btn" data-act="mult+" style="color:var(--gold)">+</button>
+        </div>
+        <div class="hint">6♥ = ${6*state.multiplier} reps</div>
+      </div>
+
+      <div>
+        <div class="label">CARDS / DAY</div>
+        <div class="adjust">
+          <button class="btn" data-act="cards-" style="color:var(--blue)">−</button>
+          <div class="big" style="color:var(--blue)">${state.cardsPerDay}</div>
+          <button class="btn" data-act="cards+" style="color:var(--blue)">+</button>
+        </div>
+        <div class="hint">~${Math.ceil(52/state.cardsPerDay)} days per deck</div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:10px">
+      <div class="label">PRESETS</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${[["Easy",3,3],["Moderate",5,4],["Spicy",8,5],["Beast",10,6]].map(p=>`<button class="pill ${state.multiplier===p[1]&&state.cardsPerDay===p[2]?"active":""}" data-preset="${p[1]},${p[2]}">${p[0]}</button>`).join("")}
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:12px">
+      <div class="label">COMBO EVENTS</div>
+      <button class="equip ${state.comboOn?"on":""}" data-act="combos">
+        <span><b>Combo Events</b><br><span class="small">Pairs, suit streaks, face-card chaos, and bonus work</span></span>
+        <span class="toggle"><span></span></span>
+      </button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        ${["light","medium","chaos"].map(m=>`<button class="pill ${state.comboMode===m?"active":""}" data-mode="${m}">${m.toUpperCase()}</button>`).join("")}
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:12px">
+      <div class="label">EQUIPMENT AVAILABLE</div>
+      <div class="small" style="margin-bottom:8px">Turn gear on to add those exercises into the lists.</div>
+      ${Object.entries(WORKOUT_CONFIG.equipment).map(([k,e])=>`<button class="equip ${state.equipment[k]?"on":""}" data-equip="${k}"><span><b>${esc(e.label)}</b><br><span class="small">${esc(e.description)}</span></span><span class="toggle"><span></span></span></button>`).join("")}
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:12px">
+      <div class="label">DECK MANAGEMENT</div>
+
+      <button class="equip" type="button" onclick="resetCurrentDeck()">
+        <span><b>Reset Current Deck</b><br><span class="small">Fresh 52-card deck. Keeps history and lifetime stats.</span></span>
+      </button>
+
+      <button class="equip" type="button" onclick="startNextDeck()">
+        <span><b>Start Next Deck</b><br><span class="small">Move to Deck ${(state.deckNumber||1)+1}. Keeps lifetime progress.</span></span>
+      </button>
+
+      <button class="equip" type="button" onclick="resetEverything()">
+        <span><b>Reset Everything</b><br><span class="small">Clear all history, stats, notes, decks, and lifetime count.</span></span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function homeHTML(done,totalToday,totalLogged){
+  const loggedCards=state.logged.length;
+  const deckNum=state.deckNumber||1;
+  const targetCards=deckNum*52;
+  const targetPerSuit=deckNum*13;
+  const bySuit=Object.fromEntries(Object.keys(SUITS).map(s=>[s,state.logged.filter(w=>w.suit===s).length]));
+
+  return `<div class="panel">
+    <div class="row">
+      <div class="small">Deck ${deckNum} · ${loggedCards}/${targetCards} cards · ${(state.lifetimeCards||0)} lifetime</div>
+      <div style="color:var(--gold);font-size:11px;font-weight:bold">${totalLogged.toLocaleString()} reps</div>
+    </div>
+
+    <div class="progress"><div class="fill" style="width:${Math.min(100,Math.round(loggedCards/targetCards*100))}%"></div></div>
+
+    <div class="suits">
+      ${Object.entries(SUITS).map(([s,info])=>`<div class="suitrow">
+        <span style="color:${info.color};font-size:16px;width:18px">${info.symbol}</span>
+        <div style="flex:1">
+          <div class="row"><span class="small">${info.name}</span><span class="small" style="color:${info.color}">${bySuit[s]}/${targetPerSuit}</span></div>
+          <div class="miniProgress"><div style="height:100%;width:${Math.min(100,bySuit[s]/targetPerSuit*100)}%;background:${info.color}"></div></div>
+        </div>
+      </div>`).join("")}
+    </div>
+  </div>
+  ${state.today.length?todayHTML(done,totalToday):dealHTML()}`;
+}
+
+function dealHTML(){
+  return `<div class="panel"><div class="label">TODAY'S EXERCISES</div>
+    ${Object.entries(SUITS).map(([s,info])=>`<div class="exerciseLine"><span style="color:${info.color};font-size:18px;width:22px">${info.symbol}</span><span style="font-size:12px;color:#ccd">${esc(state.selected[s])}</span></div>`).join("")}
+    <div class="exerciseLine" style="border-top:1px solid var(--line);padding-top:8px"><span style="width:22px">🃏</span><span class="small">${esc(state.faceExercise)} (J/Q/K/A)</span></div>
+  </div>
+  <div class="deal-info">${state.deck.length} cards left · dealing ${state.cardsPerDay}${state.deck.length < state.cardsPerDay ? " · auto-next deck" : ""}${state.comboOn?" · combos on":""}</div>
+  <button class="mainBtn" data-act="deal">DEAL ${state.cardsPerDay} CARDS</button>`;
+}
+
+function todayHTML(done,totalToday){
+  return `<div class="row" style="margin-bottom:12px"><div class="small">Today · <b style="color:${done===state.today.length?"var(--green)":"var(--gold)"}">${done}/${state.today.length} done</b> · ${totalToday} reps total</div><button class="small-btn" data-act="clear">✕ Clear</button></div>
+  ${state.events.map(e=>`<div class="event"><strong>🃏 COMBO UNLOCKED: ${esc(e.name)}</strong><div class="small">${esc(e.reason)} → ${esc(e.effect)}</div></div>`).join("")}
+  ${state.today.map((c,i)=>cardHTML(c,i)).join("")}
+  ${done===state.today.length&&state.today.length?completeHTML(totalToday):""}`;
+}
+function cardHTML(c,i){
+  const info=c.bonus?{symbol:"★",color:"var(--purple)",name:"Bonus"}:SUITS[c.suit];
+  return `<div class="card ${c.done?"done":""} ${c.bonus?"bonus":""}" style="border-color:${c.done?"#4ade8033":info.color+"66"}"><div class="cardTop"><div class="miniCard" style="border:1px solid ${info.color}66"><div style="font-size:20px;color:${info.color}">${info.symbol}</div><div style="font-size:13px;font-weight:bold;color:${info.color}">${esc(c.face)}</div></div><div style="flex:1"><div class="row"><div class="cardName" style="color:${info.color}">${esc(cardExercise(c))}</div><div class="reps">${cardReps(c)}</div></div><div class="small">${c.bonus?`Bonus · ${esc(c.name)}`:`${isFace(c.face)?"Full Body":info.name} · ${isFace(c.face)?`${c.face} = ${cardReps(c)}`:`${c.face}×${state.multiplier}`}`}</div></div></div>
+  ${c.done?`<div class="small" style="color:var(--green);margin-top:8px">✓ Complete ${state.feel[i]?`· ${esc(state.feel[i])}`:""}</div>`:`<div class="controls"><div class="feels">${FEELS.map(f=>`<button class="feel" data-feel="${i}|${esc(f)}">${f}</button>`).join("")}</div><input data-note="${i}" value="${esc(state.notes[i]||"")}" placeholder="Notes (optional)"><button class="doneBtn" data-done="${i}">✓ DONE</button></div>`}</div>`;
+}
+function completeHTML(totalToday){
+  const post=state.post||makePost(state.today,state.events);
+  return `<div class="postbox"><div style="text-align:center;font-size:28px">🔥</div><div style="text-align:center;color:var(--green);font-weight:bold">WOD Complete!</div><div class="small" style="text-align:center;margin:4px 0 12px">${totalToday} reps · ${state.today.length} cards${state.events.length?` · ${state.events.length} combo${state.events.length>1?"s":""}`:""}</div><textarea id="postText">${esc(post)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="pill" data-act="copy">Copy Post</button><button class="pill" data-act="newpost">New Version</button><button class="pill" data-act="rest">Clear & Rest</button></div></div>`;
+}
+function exercisesHTML(){
+  return `<div class="row" style="margin-bottom:14px"><div class="label" style="margin:0">SELECT EXERCISES</div><button class="pill" data-act="randomAll">🎲 Randomize All</button></div>
+  ${Object.entries(SUITS).map(([s,info])=>`<div class="select-card panel" style="border-color:${info.color}55"><div class="row" style="margin-bottom:10px"><div><div style="font-weight:bold">${info.symbol} ${info.emoji} ${info.name}</div><div class="small">2-10 × ${state.multiplier} reps · J=20 Q=30 K=40 A=50</div></div><button class="pill" data-random-suit="${s}">🎲</button></div>${availableExercises(s).map(ex=>`<button class="option ${state.selected[s]===ex?"selected":""}" style="${state.selected[s]===ex?`border-color:${info.color};color:${info.color};background:${info.color}22`:""}" data-select="${s}|${esc(ex)}">${state.selected[s]===ex?"●":"○"} ${esc(ex)}</button>`).join("")}</div>`).join("")}
+  <div class="panel"><div class="row" style="margin-bottom:10px"><div><div style="font-weight:bold">🃏 Face Cards · Full Body</div><div class="small">J=20 · Q=30 · K=40 · A=50 reps</div></div><button class="pill" data-act="randomFace">🎲</button></div>${availableFullBody().map(ex=>`<button class="option ${state.faceExercise===ex?"selected":""}" style="${state.faceExercise===ex?"border-color:#aaa;color:var(--text);background:#ffffff22":""}" data-face="${esc(ex)}">${state.faceExercise===ex?"●":"○"} ${esc(ex)}</button>`).join("")}</div>`;
+}
+function historyHTML(totalLogged){
+  return `<div class="label">HISTORY · ${state.logged.length} SETS · ${totalLogged.toLocaleString()} TOTAL REPS</div>${!state.logged.length?`<div class="empty"><div style="font-size:40px">📋</div><div>No workouts yet.</div></div>`:""}${state.logged.map(w=>{const info=w.bonus?{symbol:"★",color:"var(--purple)"}:SUITS[w.suit];return `<div class="historyItem"><div class="miniCard" style="width:42px;height:52px;border:1px solid ${info.color}66"><div style="color:${info.color};font-size:18px">${info.symbol}</div><div style="color:${info.color};font-size:11px;font-weight:bold">${esc(w.face)}</div></div><div style="flex:1"><div class="row"><b style="font-size:13px;color:${info.color}">${esc(w.exercise)}</b><b>${w.reps}</b></div><div class="small">${[w.feel,w.date].filter(Boolean).map(esc).join(" · ")}</div>${w.notes?`<div class="small"><i>${esc(w.notes)}</i></div>`:""}</div></div>`}).join("")}`;
+}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button"); if(!t)return;
+  if(t.dataset.view)update({view:t.dataset.view});
+  const a=t.dataset.act;
+  if(a==="settings")update({showSettings:!state.showSettings});
+  if(a==="mult-")update({multiplier:Math.max(1,state.multiplier-1)});
+  if(a==="mult+")update({multiplier:Math.min(20,state.multiplier+1)});
+  if(a==="cards-")update({cardsPerDay:Math.max(1,state.cardsPerDay-1)});
+  if(a==="cards+")update({cardsPerDay:Math.min(13,state.cardsPerDay+1)});
+  if(a==="combos")update({comboOn:!state.comboOn});
+  if(a==="deal")deal();
+  if(a==="clear")clearDay();
+  if(a==="rest")update({today:[],events:[],post:""});
+  if(a==="reset")resetCurrentDeck();
+  if(a==="randomAll")randomAll();
+  if(a==="randomFace")update({faceExercise:pickRandom(availableFullBody(),state.faceExercise)});
+  if(a==="newpost")update({post:makePost(state.today,state.events)});
+  if(a==="copy"){const txt=$("postText"); if(txt){txt.select();try{await navigator.clipboard.writeText(txt.value)}catch(err){document.execCommand("copy")} t.textContent="Copied";}}
+  if(t.dataset.preset){const [m,c]=t.dataset.preset.split(",").map(Number);update({multiplier:m,cardsPerDay:c});}
+  if(t.dataset.mode)update({comboMode:t.dataset.mode});
+  if(t.dataset.equip)update({equipment:{...state.equipment,[t.dataset.equip]:!state.equipment[t.dataset.equip]}});
+  if(t.dataset.randomSuit){const s=t.dataset.randomSuit;update({selected:{...state.selected,[s]:pickRandom(availableExercises(s),state.selected[s])}});}
+  if(t.dataset.select){const [s,ex]=t.dataset.select.split("|");update({selected:{...state.selected,[s]:ex}});}
+  if(t.dataset.face)update({faceExercise:t.dataset.face});
+  if(t.dataset.feel){const [i,f]=t.dataset.feel.split("|");update({feel:{...state.feel,[i]:f}});}
+  if(t.dataset.done)doneCard(Number(t.dataset.done));
+});
+document.addEventListener("input",e=>{
+  if(e.target.dataset.note!==undefined){state.notes[e.target.dataset.note]=e.target.value;save();}
+});
+function pickRandom(arr,exclude){const p=arr.filter(x=>x!==exclude);return rand(p.length?p:arr);}
+function clearDay(){
+  const unfinished=state.today.filter(c=>!c.done&&!c.bonus).map(c=>({suit:c.suit,face:c.face,id:c.id}));
+  update({deck:shuffle([...state.deck,...unfinished]),today:[],events:[],feel:{},notes:{},post:""});
+}
+function randomAll(){
+  const selected={...state.selected};
+  Object.keys(SUITS).forEach(s=>selected[s]=pickRandom(availableExercises(s),selected[s]));
+  update({selected,faceExercise:pickRandom(availableFullBody(),state.faceExercise)});
+}
+function resetAll(){
+  if(!confirm("Reset the whole season and reshuffle all cards?"))return;
+  const keep={equipment:state.equipment,comboOn:state.comboOn,comboMode:state.comboMode};
+  state={...defaultState(),...keep}; save(); render();
+}
+render();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
