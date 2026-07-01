@@ -332,23 +332,59 @@ function deal(){let deck=[...state.deck];let deckNumber=state.deckNumber||1;cons
 function combos(baseCards,deck){let cards=[...baseCards],events=[],nextDeck=[...deck];const faceCount=baseCards.filter(c=>isFace(c.face)).length;if(faceCount>=2){const add=nextDeck.shift();if(add){cards.push({...add,done:false,eventName:"Royal Pain"});events.push({name:"Royal Pain",reason:"Two or more face cards drawn",effect:"+1 bonus card"});}}const byFace={};baseCards.forEach(c=>byFace[c.face]=(byFace[c.face]||0)+1);const pair=Object.entries(byFace).find(([f,n])=>n>=2);if(pair){const n=reps(pair[0]);cards.push(bonus("Burpees",n,"Double Trouble"));events.push({name:"Double Trouble",reason:`Pair of ${pair[0]}s detected`,effect:`+${n} Burpees`});}return {cards,deck:nextDeck,events};}
 function doneCard(i){const c=state.today[i];if(isJoker(c)){const today=state.today.map((x,idx)=>idx===i?{...x,done:true}:x);const finished=today.length&&today.every(x=>x.done);update({today,post:finished?makePost(today,state.events):state.post});return;}const log={...c,exercise:displayExercise(c),reps:displayReps(c),unit:displayUnit(c),workoutStyle:state.workoutStyle,feel:state.feel[i]||"",notes:state.notes[i]||"",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"}),ts:Date.now()+i};const today=state.today.map((x,idx)=>idx===i?{...x,done:true}:x);const finished=today.length&&today.every(x=>x.done);update({today,logged:[log,...state.logged],lifetimeCards:(state.lifetimeCards||0)+1,post:finished?makePost(today,state.events):state.post});}
 
-function displayCardCode(c){
-  if(isJoker(c)) return "🃏";
+function cardLabel(c){
+  if(isJoker(c)) return "Joker";
+  if(c.bonus) return `Bonus: ${c.name || c.exercise || "Bonus"}`;
   const sym = isClassic() ? (CLASSIC_SUITS[c.suit]?.symbol || "") : (SUITS[c.suit]?.symbol || "");
-  const repeated = c.repeated ? " x2" : "";
-  return `${esc(c.face)}${sym}${repeated}`;
+  return `${c.face}${sym}`;
 }
-function drawnCardsLine(cards){
-  return cards.map(displayCardCode).join(" + ");
+function addCount(map,label,amount=1){
+  map[label]=(map[label]||0)+amount;
 }
-
-function makePost(cards,events){const total=cards.reduce((a,c)=>a+(isJoker(c)?0:displayReps(c)),0);const groups={};cards.forEach(c=>{if(isJoker(c))return;const sym=c.repeated?"↻":(c.bonus?"★":(isClassic()?CLASSIC_SUITS[c.suit]?.symbol:SUITS[c.suit]?.symbol));const ex=displayExercise(c);const unit=displayUnit(c);const key=sym+"|"+ex+"|"+unit;if(!groups[key])groups[key]={sym,ex,reps:0,unit};groups[key].reps+=displayReps(c)});const lines=Object.values(groups).map(g=>`${g.sym} ${g.reps}${g.unit==="sec"?" sec":""} ${g.ex} ${rand(["🃏","🔥","💪","😤","💀","⚡"])}`);let msg=`Deck session complete.
-
-Cards: ${drawnCardsLine(cards)}
-
-${lines.join("\n")}
-
-${total} total reps.`;if(events.length)msg+=`\n\n🃏 EVENT:\n`+events.map(e=>`${e.name}: ${e.effect}`).join("\n");msg+=`\n\nDraw complete. 🃏⚡`;return msg;}
+function cleanExerciseName(name){
+  const cleaned=String(name||"Exercise").replace(/\s*\(sec\)\s*/ig,"").trim();
+  const aliases={"Air Squats":"Squats"};
+  return aliases[cleaned] || cleaned;
+}
+function inferredUnit(name,fallback="reps"){
+  return /\(sec\)/i.test(String(name||"")) ? "sec" : (fallback||"reps");
+}
+function exerciseParts(c){
+  if(isJoker(c)) return [];
+  if(c.bonus) return [{exercise:c.exercise,reps:Number(c.reps)||0,unit:"reps"}];
+  if(isClassic()){
+    const faceTasks=classicFaceConfig()[c.face];
+    if(faceTasks){
+      return faceTasks.map(t=>({exercise:t.exercise,reps:Number(t.amount)||0,unit:t.unit||"reps"}));
+    }
+    const info=classicSuitInfo(c.suit);
+    return [{exercise:info.exercise,reps:parseInt(c.face,10)*state.classicMultiplier,unit:info.unit||"reps"}];
+  }
+  const ex=cardExercise(c);
+  return [{exercise:ex,reps:cardReps(c),unit:inferredUnit(ex,"reps")}];
+}
+function workoutSummary(cards){
+  const cardCounts={};
+  const totals={};
+  cards.forEach(c=>addCount(cardCounts,cardLabel(c)));
+  cards.forEach(c=>exerciseParts(c).forEach(part=>{
+    const exercise=cleanExerciseName(part.exercise);
+    const unit=inferredUnit(part.exercise,part.unit);
+    const key=`${exercise}|${unit}`;
+    if(!totals[key]) totals[key]={exercise,unit,reps:0};
+    totals[key].reps+=Number(part.reps)||0;
+  }));
+  return {cardCounts,totals:Object.values(totals)};
+}
+function formatAmount(amount,unit){
+  return `${amount}${unit==="sec"?" sec":""}`;
+}
+function makePost(cards,events){
+  const summary=workoutSummary(cards);
+  const cardList=cards.map(cardLabel).join(" + ");
+  const totalLines=summary.totals.map(t=>`${t.exercise}: ${formatAmount(t.reps,t.unit)}`);
+  return `Cards: ${cardList}\n\nTotals:\n${totalLines.join("\n")}`;
+}
 function resetCurrentDeck(){if(!confirm("Reset current deck? History stays."))return;state.deck=currentDeck();state.today=[];state.events=[];state.feel={};state.notes={};state.post="";save();render()} function startNextDeck(){if(!confirm("Start next deck? History stays."))return;state.deck=currentDeck();state.today=[];state.events=[];state.feel={};state.notes={};state.post="";state.deckNumber=(state.deckNumber||1)+1;save();render()} function resetEverything(){if(!confirm("Reset EVERYTHING?"))return;if(!confirm("Final warning. Clear all data?"))return;localStorage.removeItem(STORE);state=defaultState();save();render()} window.resetCurrentDeck=resetCurrentDeck;window.startNextDeck=startNextDeck;window.resetEverything=resetEverything;
 function cardSuitSymbol(c){
   if(isJoker(c)) return "🃏";
@@ -514,7 +550,7 @@ function todayHTML(done,totalToday){
   }`;
 }
 function cardHTML(c,i){const info=isJoker(c)?{symbol:"🃏",color:"var(--purple)",name:"Joker"}:c.bonus?{symbol:"★",color:"var(--purple)",name:"Bonus"}:isClassic()?CLASSIC_SUITS[c.suit]:SUITS[c.suit];const ex=displayExercise(c),amt=displayReps(c),unit=displayUnit(c);return `<div class="card ${c.done?"done":""} ${c.bonus||c.repeated||isJoker(c)?"bonus":""}" style="border-color:${c.done?"#4ade8033":info.color+"66"}"><div class="cardTop"><div class="miniCard" style="border:1px solid ${info.color}66"><div style="font-size:30px;color:${info.color};line-height:1">${info.symbol}</div><div style="font-size:16px;font-weight:bold;color:${info.color}">${isJoker(c)?"":esc(c.face)}</div></div><div style="flex:1"><div class="row"><div class="cardName" style="color:${info.color}">${esc(ex)}</div><div class="reps">${isJoker(c)?"JOKER":amt+(unit==="sec"?"s":"")}</div></div><div class="small">${isJoker(c)?"Repeat all non-joker cards drawn this session":isClassic()?`${c.repeated?"Repeat · ":""}${unit==="sec"?amt+" sec ":amt+" "}${esc(ex)}`:c.bonus?`Bonus · ${esc(c.name)}`:`${isFace(c.face)?"Full Body":info.name} · ${isFace(c.face)?`${c.face} = ${cardReps(c)}`:`${c.face}×${state.multiplier}`}`}</div>${!isJoker(c)?exerciseInfo(ex):""}</div></div>${c.done?`<div class="small" style="color:var(--green);margin-top:8px">✓ Complete ${state.feel[i]?`· ${esc(state.feel[i])}`:""}</div>`:`<div class="controls"><div class="feels">${FEELS.map(f=>`<button class="feel" data-feel="${i}|${esc(f)}">${f}</button>`).join("")}</div><input data-note="${i}" value="${esc(state.notes[i]||"")}" placeholder="Notes (optional)"><button class="doneBtn" data-done="${i}">✓ DONE</button></div>`}</div>`}
-function completeHTML(total){const post=state.post||makePost(state.today,state.events);return `<div class="postbox"><div style="text-align:center;font-size:28px">🔥</div><div style="text-align:center;color:var(--green);font-weight:bold">WOD Complete!</div><div class="small" style="text-align:center;margin:4px 0 12px">${total} total · ${state.today.length} cards</div><textarea id="postText">${esc(post)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="pill" data-act="copy">Copy Post</button><button class="pill" data-act="newpost">New Version</button><button class="pill" data-act="rest">Clear & Rest</button></div></div>`}
+function completeHTML(total){const post=state.post||makePost(state.today,state.events);return `<div class="postbox"><div style="text-align:center;color:var(--green);font-weight:bold;margin-bottom:8px">WOD Complete</div><textarea id="postText">${esc(post)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="pill" data-act="copy">Copy</button><button class="pill" data-act="rest">Clear & Rest</button></div></div>`}
 function exercisesHTML(){if(isClassic())return `<div class="panel"><span class="mode-badge">CLASSIC DECK</span><div class="label">Suit Rules</div>${Object.entries(CLASSIC_SUITS).map(([s,i])=>`<div class="equip"><span><b style="color:${i.color}">${i.symbol} ${i.name}</b><br><span class="small">${i.exercise}${i.unit==="sec"?" · seconds":" · reps"}</span>${exerciseInfo(i.exercise)}</span></div>`).join("")}<div class="label" style="margin-top:12px">Face Cards</div><div class="small">J = 20 Burpees<br>Q = 20 Push-ups<br>K = 50 Squats<br>A = 15 Burpees + 30 Squats<br><br>🃏 Joker = repeat all non-joker cards drawn this session.</div></div>`;return `<div class="row" style="margin-bottom:14px"><div class="label" style="margin:0">Select Exercises</div><button class="pill" data-act="randomAll">🎲 Randomize All</button></div>${Object.entries(SUITS).map(([s,i])=>`<div class="panel" style="border-color:${i.color}55"><div class="row" style="margin-bottom:10px"><div><div style="font-weight:bold">${i.symbol} ${i.name}</div><div class="small">2-10 × ${state.multiplier} reps</div></div><button class="pill" data-random-suit="${s}">🎲</button></div>${availableExercises(s).map(ex=>`<button class="option ${state.selected[s]===ex?"selected":""}" style="${state.selected[s]===ex?`border-color:${i.color};color:${i.color};background:${i.color}22`:""}" data-select="${s}|${esc(ex)}">${state.selected[s]===ex?"●":"○"} ${esc(ex)}${state.selected[s]===ex?exerciseInfo(ex):""}</button>`).join("")}</div>`).join("")}<div class="panel"><div class="row" style="margin-bottom:10px"><div><div style="font-weight:bold">🃏 Face Cards · Full Body</div><div class="small">J=20 · Q=30 · K=40 · A=50</div></div><button class="pill" data-act="randomFace">🎲</button></div>${availableFull().map(ex=>`<button class="option ${state.faceExercise===ex?"selected":""}" style="${state.faceExercise===ex?"border-color:#aaa;color:var(--text);background:#ffffff22":""}" data-face="${esc(ex)}">${state.faceExercise===ex?"●":"○"} ${esc(ex)}${state.faceExercise===ex?exerciseInfo(ex):""}</button>`).join("")}</div>`}
 function historyHTML(total){return `<div class="label">History · ${state.logged.length} sets · ${total.toLocaleString()} total reps</div>${!state.logged.length?`<div class="empty"><div style="font-size:40px">📋</div><div>No workouts yet.</div></div>`:""}${state.logged.map(w=>{const info=w.suit==="joker"?{symbol:"🃏",color:"var(--purple)"}:w.bonus?{symbol:"★",color:"var(--purple)"}:SUITS[w.suit]||CLASSIC_SUITS[w.suit]||{symbol:"•",color:"#888"};return `<div class="historyItem"><div class="miniCard" style="width:42px;height:52px;border:1px solid ${info.color}66"><div style="color:${info.color};font-size:18px">${info.symbol}</div><div style="color:${info.color};font-size:11px;font-weight:bold">${esc(w.face)}</div></div><div style="flex:1"><div class="row"><b style="font-size:13px;color:${info.color}">${esc(w.exercise)}</b><b>${w.reps}${w.unit==="sec"?"s":""}</b></div><div class="small">${[w.feel,w.date].filter(Boolean).map(esc).join(" · ")}</div>${w.notes?`<div class="small"><i>${esc(w.notes)}</i></div>`:""}</div></div>`}).join("")}`}
 document.addEventListener("click",async e=>{const t=e.target.closest("button");if(!t)return;if(t.dataset.view)update({view:t.dataset.view});const a=t.dataset.act;
